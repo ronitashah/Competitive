@@ -25,7 +25,7 @@ struct Array {
     static Array<uint> indexes(uint length) {
         Array<uint> ans = Array<uint>(length);
         for (uint x = 0; x < length; x++) {
-            ans[x] = x;
+            ans.set(x, x);
         }
         return ans;
     }
@@ -53,7 +53,8 @@ struct Array {
     }
     constexpr E* ptr() const {return (E*)M.ptr(index);}
     constexpr E* ptr(uint i) const {return ptr() + i;}
-    constexpr E& operator[] (uint i) const {return *ptr(i);}
+    constexpr idx id(uint i) const {return index + i * sizeof(E);}
+    constexpr E operator[] (uint i) const {return *ptr(i);}
     constexpr E get(uint i) const {return *ptr(i);}
     constexpr E head() const {return get(length - 1);}
     constexpr void set(uint i, E v) const {*ptr(i) = v;}
@@ -61,6 +62,16 @@ struct Array {
     constexpr E* end() const {return ptr(length);}
     constexpr Array<E> view(uint start, uint end) const {return Array<E>(index + start * sizeof(E), end - start);} // !!!
     constexpr Array<E> view(uint l) const {return view(0, l);} // !!!
+    uint find(E v) const {
+        E* p = ptr();
+        for (uint x = 0; x < length; x++) {
+            if (*(p + x) == v) {
+                return x;
+            }
+        }
+        return MAXUINT;
+    }
+    inline bool contains(E v) const {return find(v) != MAXUINT;}
     int compare(Array<E> a) const {
         uint min = std::min(length, a.length);
         for (uint x = 0; x < min; x++) {
@@ -95,7 +106,7 @@ struct Array {
     void sort() const {
         Array<uint> stack = Array<uint>(4);
         uint a = 0;
-        stack[0] = length;
+        stack.set(0, length);
         uint size = 1;
         for (;size >= 1;) {
             uint b = stack[size - 1];
@@ -137,7 +148,7 @@ struct Array {
             if (size == stack.length) {
                 stack.resize(stack.length << 1);
             }
-            stack[size] = i;
+            stack.set(size, i);
             size++;
         }
         stack.release();

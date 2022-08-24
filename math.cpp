@@ -23,12 +23,13 @@ inline ulong rand(ulong min, ulong max) {return randulong() % (max - min) + min;
 
 #define bits(E) (sizeof(E) << 3)
 
-constexpr uint log2(uint num) {return 31 - __builtin_clz(num);}
-constexpr uint log2(ulong num) {return 63 - __builtin_clz(num);}
-constexpr uint floor2(uint num) {return 1 << log2(num);}
-constexpr ulong floor2(ulong num) {return 1L << log2(num);}
-constexpr uint ceil2(uint num) {return 1 << (log2((num) - 1) + 1);}
-constexpr ulong ceil2(ulong num) {return 1L << (log2((num) - 1) + 1);}
+#define POWS(E) \
+constexpr E log2(E num) {return bits(E) - __builtin_clz(num) - (E)1;} \
+constexpr E floor2(E num) {return (E)1 << log2(num);} \
+constexpr E ceil2(E num) {return (E)1 << (log2((E)(num - (E)1)) + (E)1);}
+
+INTS(POWS);
+#undef POWS
 
 inline int mod(int a, int b) {return (a >= 0) ? (a % b) : (b - 1 - ((-a - 1) % b));}
 inline long mod(long a, long b) {return (a >= 0) ? (a % b) : (b - 1 - ((-a - 1) % b));}

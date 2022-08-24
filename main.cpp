@@ -1,31 +1,35 @@
 #include "set.cpp"
 #include "heap.cpp"
+#include "map.cpp"
 
 int main() {
-    Array<uint> a = Array<uint>(1 << 20);
+    Array<ulong> a = Array<ulong>(1 << 2);
+    Array<ulong> b = Array<ulong>(a.length);
+    Array<ulong> c = Array<ulong>(a.length);
     for (uint x = 0; x < a.length; x++) {
-        a[x] = rand(a.length * 2);
+        a.set(x, randulong());
+        b.set(x, randulong());
+        c.set(x, randulong());
     }
-    a.sort();
-    Set<uint> set = Set<uint>();
-    set.add(a[0]);
-    for (uint x = 1; x < a.length; x++) {
-        if (a[x] == a[x - 1]) {
-            continue;
+    Map<ulong, ulong> m = Map<ulong, ulong>();
+    for (uint x = 0; x < a.length; x++) {
+        if (!m.add(a[x], b[x])) {
+            println("bad");
         }
-        set.add(a[x]);
     }
     for (uint x = 0; x < a.length; x++) {
-        bool b = set.remove(a[x]);
-        if (!b) {
-            if (a[x] != a[x - 1]) {
-                println("bad");
-            }
+        uint i = m.id(a[x]);
+        if (i == MAXUINT || *(ulong*)M.ptr(i) != b[x]) {
+            println("bad2");
         }
-        if (b && x != 0 && a[x] == a[x - 1]) {
-            println(x);
+        *(ulong*)M.ptr(i) = c[x];
+    }
+    for (uint x = 0; x < a.length; x++) {
+        if (m.get(a[x]) != c[x]) {
+            println("bad3");
         }
     }
+    println(m);
     println("completed");
     return 0;
 }

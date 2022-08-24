@@ -159,7 +159,25 @@ template<class E>
 RELD(Heap<E>)
 }
 template<class E>
-PRINTD(Heap<E>);
+PRINTD(Heap<E>)
+
+template<class E>
+struct Set;
+namespace my {
+template<class E>
+RELD(Set<E>)
+}
+template<class E>
+PRINTD(Set<E>)
+
+template<class K, class V>
+struct Map;
+namespace my {
+template<class K, class V>
+RELD(Map<K COMMA V>)
+}
+template<class K, class V>
+PRINTD(Map<K COMMA V>)
 
 template<class A, class B>
 struct T2 {

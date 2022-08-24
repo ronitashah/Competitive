@@ -1,24 +1,30 @@
+#pragma once
+
 #include "list.cpp"
 
 template<class E>
 struct Set {
     constexpr static uint AVBYTES = 16;
-    uint size;
     Array<List<E>> arr;
+    uint size;
     constexpr Set() : size(0) {
         arr = Array<List<E>>(1);
         arr.fill(List<E>());
     }
-    constexpr uint index(E v) const {return v & (arr.length - 1);}
-    bool contains(E v) const {
-        List<E> l = arr[index(v)];
-        E* p = l.ptr();
-        for (uint x = 0; x < l.size; x++) {
-            if (*(p + x) == v) {
-                return true;
-            }
+    Set(Array<E> a) : Set() {
+        for (uint x = 0; x < a.length; x++) {
+            add(a[x]);
         }
-        return false;
+    }
+    inline void release() const {arr.release();}
+    constexpr uint index(E v) const {return v & (arr.length - 1);}
+    inline bool contains(E v) const {return arr[index(v)].contains(v);}
+    inline void force(E v) {
+        uint i = index(v);
+        List<E> l = arr[i];
+        l.add(v);
+        arr.set(i, l);
+        size++;
     }
     void resize(uint l) {
         Array<List<E>> next = Array<List<E>>(l);
@@ -32,38 +38,46 @@ struct Set {
             }
         }
     }
-    inline void force(E v) {
+    inline bool add(E v) {
         uint i = index(v);
+        if (arr[i].contains(v)) {
+            return false;
+        }
         List<E> l = arr[i];
         l.add(v);
-        arr[i] = l;
+        arr.set(i, l);
         size++;
-    }
-    inline void add(E v) {
         if (size * sizeof(E) > arr.length * AVBYTES) {
             resize(arr.length * 2);
         }
-        force(v);
+        return true;
     }
-    bool remove(E v) {
+    inline bool remove(E v) {
         uint i = index(v);
         List<E> l = arr[i];
-        E* p = l.ptr();
-        for (uint x = 0; x < l.size; x++) {
-            if (*(p + x) == v) {
-                *(p + x) = *(p + l.size - 1);
-                l.remove();
-                arr[i] = l;
-                size--;
-                if (SMALLSIZE && size * sizeof(E) < arr.length * AVBYTES) {
-                    resize(std::max((uint)1, arr.length / 2));
-                }
-                return true;
-            }
+        uint f = l.find(v);
+        if (f == MAXUINT) {
+            return false;
         }
-        return false;
+        l.set(f, l.head());
+        l.remove();
+        arr.set(i, l);
+        size--;
+        if (SMALLSIZE && size * sizeof(E) < arr.length * AVBYTES / 2) {
+            resize(std::max((uint)1, arr.length / 2));
+        }
+        return true;
     }
 };
 
 template<class E>
 constexpr uint Set<E>::AVBYTES;
+
+namespace my {
+template<class E>
+RELF(Set<E>)
+}
+template<class E>
+inline std::ostream& operator<<(std::ostream& os, Set<E> s) {
+    return os << s.arr;
+}

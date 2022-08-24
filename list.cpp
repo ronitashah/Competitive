@@ -1,3 +1,5 @@
+#pragma once
+
 #include "array.cpp"
 
 template<class E>
@@ -21,10 +23,11 @@ struct List {
     inline List(const E* p, uint l) : List(Array<E>(p, l), l) {}
     constexpr E* ptr() const {return arr.ptr();}
     constexpr E* ptr(uint i) const {return arr.ptr(i);}
+    constexpr idx id(uint i) const {return arr.id(i);}
     constexpr E get(uint i) const {return arr.get(i);}
     constexpr E head() const {return view().head();}
-    constexpr void set(uint i, E v) const {arr[i] = v;}
-    constexpr E& operator[](uint i) const {return *ptr(i);}
+    constexpr void set(uint i, E v) const {arr.set(i, v);}
+    constexpr E operator[](uint i) const {return *ptr(i);}
     inline Array<E> array() const {return arr.clone(size);}
     constexpr Array<E> view(uint from, uint to) const {return arr.view(from, to);}
     constexpr Array<E> view(uint l) const {return arr.view(l);}
@@ -38,6 +41,8 @@ struct List {
     inline void sort() const {view().sort();}
     template<class V>
     inline void sort(Array<V> move) const {view().sort(move);}
+    inline uint find(E v) const {return view().find(v);}
+    inline bool contains(E v) const {return view().contains(v);}
     inline void add() {
         if (size == arr.length) {
             arr.resize(std::max((uint)1, 2 * arr.length));

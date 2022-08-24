@@ -59,7 +59,7 @@ struct Heap {
     E pop() {
         E ans = peek();
         size--;
-        arr[0] = size;
+        arr.set(0, arr[size]);
         if (SMALLSIZE && size == arr.length / 4) {
             arr.resize(arr.length / 2);
         }
