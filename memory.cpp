@@ -3,6 +3,8 @@
 #include "basic.cpp"
 #include "math.cpp"
 
+constexpr bool SMALLSIZE = false;
+
 constexpr uint maxalign = alignof(max_align_t);
 constexpr static uint align(uint s) {return std::min(floor2(s), maxalign);}
 
@@ -38,9 +40,9 @@ struct Memory {
         memset(ptr(ans), 0, s);
         return ans;
     }
-    inline idx clone(idx p, uint s, uint a) { 
+    inline idx clone(idx p, uint s, uint a) { //large sizing doesn't work
         idx ans = alloc(s, a);
-        memcpy(ptr(ans), ptr(p), s);
+        memcpy(ptr(ans), ptr(p), std::min(s, ans - p));
         return ans;
     }
     inline idx ralloc(idx p, uint s, uint a) {

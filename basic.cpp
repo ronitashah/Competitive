@@ -8,6 +8,8 @@
 #include <chrono>
 
 #define COMMA ,
+#define PAREN0 (
+#define PAREN1 )
 
 #define same(A, B) (std::is_same<A, B>::value)
 
@@ -46,6 +48,9 @@ constexpr double intfloat(ulong x) {return *(double*)&x;}
 
 #define swapint(a, b) a^=b; b^=a; a^=b
 #define swap(a, b, E) {E rewfrerg = a; a = b; b = rewfrerg;}
+
+#define MIN(a, b) ((a) < (b) ? a : b)
+#define MAX(a, b) ((b) < (a) ? b : a)
 
 #define PRINTBITS(E) \
 inline void printbits(E x) {print(std::bitset<sizeof(E) * 8>(x));} \
@@ -189,3 +194,17 @@ CMPF(T2<A COMMA B>)
 template<class A, class B>
 RELF(T2<A COMMA B>)
 }
+
+//first true
+#define BINSEARCH(C0, C1, L) \
+uint min = 0; \
+uint max = (L) + 1; \
+for (;max > min + 1;) { \
+    uint mid = (min + max - 1) / 2; \
+    if (C0 mid C1) { \
+        max = mid + 1; \
+        continue; \
+    } \
+    min = mid + 1; \
+} \
+return min

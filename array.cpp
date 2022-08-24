@@ -10,7 +10,7 @@ struct Array {
     idx index;
     uint length;
     constexpr Array() {
-        index = MAXUINT;
+        index = 0;
         length = 0;
     }
     inline Array(uint l) {
@@ -22,8 +22,15 @@ struct Array {
     }
     inline Array(std::initializer_list<E> l) : Array(l.begin(), l.size()) {}
     constexpr Array(idx i, uint l) : index(i), length(l) {}
-    inline void init() const {memset(ptr(), 0, length * sizeof(E));}
-    void init(E v) const {
+    static Array<uint> indexes(uint length) {
+        Array<uint> ans = Array<uint>(length);
+        for (uint x = 0; x < length; x++) {
+            ans[x] = x;
+        }
+        return ans;
+    }
+    inline void fill() const {memset(ptr(), 0, length * sizeof(E));}
+    void fill(E v) const {
         E* p = ptr();
         for (uint x = 0; x < length; x++) {
             *(p + x) = v;
@@ -50,6 +57,8 @@ struct Array {
     constexpr E get(uint i) const {return *ptr(i);}
     constexpr E head() const {return get(length - 1);}
     constexpr void set(uint i, E v) const {*ptr(i) = v;}
+    constexpr E* begin() const {return ptr();}
+    constexpr E* end() const {return ptr(length);}
     constexpr Array<E> view(uint start, uint end) const {return Array<E>(index + start * sizeof(E), end - start);} // !!!
     constexpr Array<E> view(uint l) const {return view(0, l);} // !!!
     int compare(Array<E> a) const {
@@ -61,10 +70,28 @@ struct Array {
             }
         }
         return length - a.length;
-    }
-    
+    }    
     CMPOPS(Array<E>)
 
+    uint higher(E v) {
+        BINSEARCH(v < get PAREN0, PAREN1, length);
+    }
+    uint ceil(E v) {
+        BINSEARCH(v <= get PAREN0, PAREN1, length);
+    }
+    uint inline lower(E v) {
+        return ceil(v) - 1;
+    }
+    uint inline floor(E v) {
+        return higher(v) - 1;
+    }
+    int inline binsearch(E v) {
+        uint ans = ceil(v);
+        if (ans == length || v < get(ans)) {
+            return -ans - 1;
+        }
+        return ans;
+    }
     void sort() const {
         Array<uint> stack = Array<uint>(4);
         uint a = 0;
@@ -115,6 +142,8 @@ struct Array {
         }
         stack.release();
     }
+    template <class V>
+    void sort(Array<V> move) const;
 };
 
 template <class E>
@@ -140,7 +169,7 @@ void Array<E>::sort() const { \
     E* p1 = space.ptr(); \
     uint* p2 = counts.ptr(); \
     for (ubyte r = 0; r < bits(E); r += RADIX) { \
-        counts.init(); \
+        counts.fill(); \
         for (uint x = 0; x < length; x++) { \
             (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++; \
         } \
@@ -155,11 +184,49 @@ void Array<E>::sort() const { \
         } \
         swap(p0, p1, E*); \
     } \
-    if (bits(E) == RADIX) { \
+    if (ptr() != p0) { \
         memcpy(p1, p0, length * sizeof(E)); \
     } \
     space.release(); \
     counts.release(); \
+} \
+template<> \
+template<class V> \
+void Array<E>::sort(Array<V> move) const { \
+    Array<E> space = Array<E>(length); \
+    Array<V> movespace = Array<V>(length); \
+    Array<uint> counts = Array<uint>(1 << RADIX); \
+    E* p0 = ptr(); \
+    E* p1 = space.ptr(); \
+    uint* p2 = counts.ptr(); \
+    V* m0 = move.ptr(); \
+    V* m1 = movespace.ptr(); \
+    for (ubyte r = 0; r < bits(E); r += RADIX) { \
+        counts.fill(); \
+        for (uint x = 0; x < length; x++) { \
+            (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++; \
+        } \
+        uint sum = 0; \
+        for (uint x = 0; x < (1 << RADIX); x++) { \
+            uint v = *(p2 + x); \
+            *(p2 + x) = sum; \
+            sum += v; \
+        } \
+        for (uint x = 0; x < length; x++) { \
+            uint i = (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++; \
+            *(p1 + i) = *(p0 + x); \
+            *(m1 + i) = *(m0 + x); \
+        } \
+        swap(p0, p1, E*); \
+        swap(m0, m1, V*); \
+    } \
+    if (ptr() != p0) { \
+        memcpy(p1, p0, length * sizeof(E)); \
+        memcpy(m1, m0, length * sizeof(V)); \
+    } \
+    space.release(); \
+    counts.release(); \
+    movespace.release(); \
 }
 
 NUMS(RADIXSORT)

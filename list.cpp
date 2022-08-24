@@ -5,11 +5,11 @@ struct List {
     Array<E> arr;
     uint size;
     inline List() {
-        arr = Array<E>(1);
+        arr = Array<E>();
         size = 0;
     }
     inline List(uint s) {
-        arr = Array<E>(std::max(s, (uint)1));
+        arr = Array<E>(s);
         size = s;
     }
     constexpr List(Array<E> a, uint s) {
@@ -23,20 +23,24 @@ struct List {
     constexpr E* ptr(uint i) const {return arr.ptr(i);}
     constexpr E get(uint i) const {return arr.get(i);}
     constexpr E head() const {return view().head();}
-    constexpr void set(uint i, E v) const {arr.set(i, v);}
+    constexpr void set(uint i, E v) const {arr[i] = v;}
     constexpr E& operator[](uint i) const {return *ptr(i);}
     inline Array<E> array() const {return arr.clone(size);}
     constexpr Array<E> view(uint from, uint to) const {return arr.view(from, to);}
     constexpr Array<E> view(uint l) const {return arr.view(l);}
     constexpr Array<E> view() const {return arr.view(size);}
+    constexpr E* begin() const {return ptr();}
+    constexpr E* end() const {return view().end();}
     constexpr void release() const {view().release();}
     inline int compare(List<E> l) const {return view().compare(l.view());}
     CMPOPS(List<E>)
     inline ulong hash() const {return view().hash();}
     inline void sort() const {view().sort();}
+    template<class V>
+    inline void sort(Array<V> move) const {view().sort(move);}
     inline void add() {
         if (size == arr.length) {
-            arr.resize(arr.length << 1);
+            arr.resize(std::max((uint)1, 2 * arr.length));
         }
         size++;
     }
@@ -69,7 +73,7 @@ struct List {
     }
     inline E remove() {
         E ans = head();
-        if (size == (arr.length >> 2) && arr.length > 1) {
+        if (SMALLSIZE && size == (arr.length >> 2) && arr.length > 1) {
             arr.resize(arr.length >> 1);
         }
         size--;
