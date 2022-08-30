@@ -6,10 +6,10 @@ template<class E>
 struct Set {
     constexpr static uint AVBYTES = 16;
     Array<List<E>> arr;
-    uint size;
-    constexpr Set() : size(0) {
+    uint size = 0;
+    constexpr Set() {
         arr = Array<List<E>>(1);
-        arr.fill(List<E>());
+        arr.init();
     }
     Set(Array<E> a) : Set() {
         for (uint x = 0; x < a.length; x++) {
@@ -19,16 +19,17 @@ struct Set {
     inline void release() const {arr.release();}
     constexpr uint index(E v) const {return v & (arr.length - 1);}
     inline bool contains(E v) const {return arr[index(v)].contains(v);}
+    inline bool operator[](E v) const {return contains(v);}
     inline void force(E v) {
         uint i = index(v);
         List<E> l = arr[i];
         l.add(v);
-        arr.set(i, l);
+        arr.ptr()[i] = l;
         size++;
     }
     void resize(uint l) {
         Array<List<E>> next = Array<List<E>>(l);
-        next.fill(List<E>());
+        next.init();
         swap(arr, next, Array<List<E>>);
         size = 0;
         for (uint x = 0; x < next.length; x++) {
@@ -45,7 +46,7 @@ struct Set {
         }
         List<E> l = arr[i];
         l.add(v);
-        arr.set(i, l);
+        arr.ptr()[i] = l;
         size++;
         if (size * sizeof(E) > arr.length * AVBYTES) {
             resize(arr.length * 2);
@@ -59,9 +60,9 @@ struct Set {
         if (f == MAXUINT) {
             return false;
         }
-        l.set(f, l.head());
+        l.ptr()[f] = l.head();
         l.remove();
-        arr.set(i, l);
+        arr.ptr()[i] = l;
         size--;
         if (SMALLSIZE && size * sizeof(E) < arr.length * AVBYTES / 2) {
             resize(std::max((uint)1, arr.length / 2));

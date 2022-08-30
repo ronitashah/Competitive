@@ -5,90 +5,104 @@
 template<class K, class V>
 struct Map {
     constexpr static uint AVBYTES = 16;
-    Array<List<T2<K, V>>> arr;
+    Array<List<K>> keys;
+    Array<List<V>> vals;
     uint size;
     inline Map() {
         size = 0;
-        arr = Array<List<T2<K, V>>>(1);
-        arr.fill(List<T2<K, V>>());
+        keys = Array<List<K>>(1);
+        keys.init();
+        vals = Array<List<V>>(1);
+        vals.init();
     }
-    static uint find(List<T2<K, V>> l, K k) {
-        T2<K, V>* p = l.ptr();
-        for (uint x = 0; x < l.size; x++) {
-            if ((p + x)->a == k) {
-                return x;
-            }
+    Map(Array<K> ks, Array<V> vs) : Map() {
+        for (uint x = 0; x < ks.length; x++) {
+            add(ks[x], vs[x]);
         }
-        return MAXUINT;
+    } 
+    inline void release() const {
+        keys.release();
+        vals.release();
     }
-    inline void release() const {arr.release();}
-    constexpr uint index(K k) const {return k & (arr.length - 1);}
-    idx id(K k) const {
-        List<T2<K, V>> l = arr[index(k)];
-        uint i = find(l, k);
-        if (i == MAXUINT) {
-            return MAXUINT;
+    constexpr uint index(K k) const {return k & (keys.length - 1);}
+    inline idx id(K k) const {
+        uint i = index(k);
+        uint f = keys[i].find(k);
+        if (f == MAXUINT) {
+            return nullidx;
         }
-        return M.index((char*)&(l.ptr(i)->b));
+        return vals[i].id(f);
     }
-    inline bool contains(K k) const {return id(k) != MAXUINT;}
+    inline bool contains(K k) const {return id(k) != nullidx;}
     inline V get(K k) const {
         idx i = id(k);
-        if (i == MAXUINT) {
+        if (i == nullidx) {
             return 0;
         }
         return *(V*)M.ptr(i);
     }
+    inline V operator[](K k) const {return get(k);}
     inline void force(K k, V v) {
         uint i = index(k);
-        List<T2<K, V>> l = arr[i];
-        l.add(T2<K, V>(k, v));
-        arr.set(i, l);
+        List<K> lk = keys[i];
+        lk.add(k);
+        keys.ptr()[i] = lk;
+        List<V> lv = vals[i];
+        lv.add(v);
+        vals.ptr()[i] = lv;
         size++;
     }
-    inline void force(T2<K, V> t) {force(t.a, t.b);}
     void resize(uint l) {
-        Array<List<T2<K, V>>> next = Array<List<T2<K, V>>>(l);
-        next.fill(List<T2<K, V>>());
-        swap(arr, next, Array<List<T2<K COMMA V>>>);
+        Array<List<K>> nextk = Array<List<K>>(l);
+        nextk.init();
+        Array<List<V>> nextv = Array<List<V>>(l);
+        nextv.init();
+        swap(keys, nextk, Array<List<K>>);
+        swap(vals, nextv, Array<List<V>>);
         size = 0;
-        for (uint x = 0; x < next.length; x++) {
-            List<T2<K, V>> l = next[x];
-            for (uint y = 0; y < l.size; y++) {
-                force(l[y]);
+        for (uint x = 0; x < nextk.length; x++) {
+            for (uint y = 0; y < nextk[x].size; y++) {
+                force(nextk[x][y], nextv[x][y]);
             }
         }
     }
     inline bool add(K k, V v) {
         uint i = index(k);
-        List<T2<K, V>> l = arr[i];
-        uint f = find(l, k);
+        List<K> lk = keys[i];
+        uint f = lk.find(k);
         if (f != MAXUINT) {
-            l.set(f, T2<K, V>(k, v));
+            lk.ptr()[f] = k;
+            vals[i].ptr()[f] = v;
             return false;
         }
-        l.add(T2<K, V>(k, v));
-        arr.set(i, l);
+        lk.add(k);
+        keys.ptr()[i] = lk;
+        List<V> lv = vals[i];
+        lv.add(v);
+        vals.ptr()[i] = lv;
         size++;
-        if (size * sizeof(K) == arr.length * AVBYTES) {
-            resize(arr.length * 2);
+        if (size * sizeof(K) == keys.length * AVBYTES) {
+            resize(keys.length * 2);
         }
         return true;
     }
-    inline bool add(T2<K, V> t) {return add(t.a, t.b);}
     inline bool remove(K k) {
         uint i = index(k);
-        List<T2<K, V>> l = arr[i];
-        uint f = find(l, k);
+        List<K> lk = keys[i];
+        uint f = lk.find(k);
         if (f == MAXUINT) {
             return false;
         }
-        l.set(f, l.head());
-        l.remove();
-        arr.set(i, l);
+        lk.ptr()[f] = lk.head();
+        lk.remove();
+        keys.ptr()[i] = lk;
+        List<V> lv = vals[i];
+        lv.ptr()[f] = lv.head();
+        lv.remove();
+        vals.ptr()[i] = lv;
         size--;
-        if (SMALLSIZE && size * sizeof(K) < arr.length * AVBYTES / 2) {
-            resize(std::max((uint)1, arr.length / 2));
+        if (SMALLSIZE && size * sizeof(K) < keys.length * AVBYTES / 2) {
+            resize(std::max((uint)1, keys.length / 2));
         }
         return true;
     }

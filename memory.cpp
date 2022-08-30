@@ -9,6 +9,7 @@ constexpr uint maxalign = alignof(max_align_t);
 constexpr static uint align(uint s) {return std::min(floor2(s), maxalign);}
 
 typedef uint idx;
+constexpr idx nullidx = MAXUINT;
 
 struct Memory {
     static constexpr idx MINLEN = 8;

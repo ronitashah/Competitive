@@ -21,20 +21,16 @@ struct Array {
         copy(p);
     }
     inline Array(std::initializer_list<E> l) : Array(l.begin(), l.size()) {}
-    constexpr Array(idx i, uint l) : index(i), length(l) {}
+    constexpr Array(idx i, uint l) {
+        index = i;
+        length = l;
+    }
     static Array<uint> indexes(uint length) {
         Array<uint> ans = Array<uint>(length);
         for (uint x = 0; x < length; x++) {
-            ans.set(x, x);
+            ans.ptr()[x] = x;
         }
         return ans;
-    }
-    inline void fill() const {memset(ptr(), 0, length * sizeof(E));}
-    void fill(E v) const {
-        E* p = ptr();
-        for (uint x = 0; x < length; x++) {
-            *(p + x) = v;
-        }
     }
     inline void copy(const E* p) const {memcpy(ptr(), p, length * sizeof(E));}
     inline void copy(Array<E> a) const {copy(a.ptr());}
@@ -62,10 +58,20 @@ struct Array {
     constexpr E* end() const {return ptr(length);}
     constexpr Array<E> view(uint start, uint end) const {return Array<E>(index + start * sizeof(E), end - start);} // !!!
     constexpr Array<E> view(uint l) const {return view(0, l);} // !!!
-    uint find(E v) const {
-        E* p = ptr();
+    inline void fill() const {memset(ptr(), 0, length * sizeof(E));}
+    void fill(E v) const {
         for (uint x = 0; x < length; x++) {
-            if (*(p + x) == v) {
+            ptr()[x] = v;
+        }
+    }
+    void init() const {
+        for (uint x = 0; x < length; x++) {
+            ptr()[x] = E();
+        }
+    }
+    uint find(E v) const {
+        for (uint x = 0; x < length; x++) {
+            if (get(x) == v) {
                 return x;
             }
         }
@@ -88,7 +94,7 @@ struct Array {
         BINSEARCH(v < get PAREN0, PAREN1, length);
     }
     uint ceil(E v) {
-        BINSEARCH(v <= get PAREN0, PAREN1, length);
+        BINSEARCH(!PAREN0 get PAREN0, PAREN1 < v PAREN1, length);
     }
     uint inline lower(E v) {
         return ceil(v) - 1;
@@ -106,49 +112,49 @@ struct Array {
     void sort() const {
         Array<uint> stack = Array<uint>(4);
         uint a = 0;
-        stack.set(0, length);
+        stack.ptr()[0] = length;
         uint size = 1;
         for (;size >= 1;) {
             uint b = stack[size - 1];
             E* p = ptr();
             if (b - a < INSERTION) {
                 for (uint i = a + 1; i < b; i++) {
-                    E v = *(p + i);
+                    E v = p[i];
                     for (uint x = i;;x--) {
-                        if (x == a || *(p + x - 1) < v) {
-                            *(p + x) = v;
+                        if (x == a || p[x - 1] < v) {
+                            p[x] = v;
                             break;
                         }
-                        *(p + x) = *(p + x - 1);
+                        p[x] = p[x - 1];
                     }
                 }
                 a = b + 1;
                 size--;
                 continue;
             }
-            E v1 = *(p + a);
-            E v2 = *(p + (a + b) / 2);
-            E v3 = *(p + b - 1);
+            E v1 = p[a];
+            E v2 = p[(a + b) / 2];
+            E v3 = p[b - 1];
             uint i = v1 < v2 ? v2 < v3 ? (a + b) / 2 : v1 < v3 ? b - 1 : a : v1 < v3 ? a : v2 < v3 ? b - 1 : (a + b) / 2;
-            E v = *(p + i);
-            *(p + i) = *(p + a);
-            *(p + a) = v;
+            E v = p[i];
+            p[i] = p[a];
+            p[a] = v;
             i = a;
             for (uint x = a + 1; x < b; x++) {
-                E q = *(p + x);
+                E q = p[x];
                 int c = my::compare(v, q);
                 if (c < 0 || (c == 0 && (x & 1))) {
                     continue;
                 }
-                *(p + i) = q;
+                p[i] = q;
                 i++;
-                *(p + x) = *(p + i);
-                *(p + i) = v;
+                p[x] = p [i];
+                p[i] = v;
             }
             if (size == stack.length) {
                 stack.resize(stack.length << 1);
             }
-            stack.set(size, i);
+            stack.ptr()[size] = i;
             size++;
         }
         stack.release();
@@ -182,16 +188,16 @@ void Array<E>::sort() const { \
     for (ubyte r = 0; r < bits(E); r += RADIX) { \
         counts.fill(); \
         for (uint x = 0; x < length; x++) { \
-            (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++; \
+            p2[(cmpmod(p0[x]) >> r) & ((1 << RADIX) - 1)]++; \
         } \
         uint sum = 0; \
         for (uint x = 0; x < (1 << RADIX); x++) { \
-            uint v = *(p2 + x); \
-            *(p2 + x) = sum; \
+            uint v = p2[x]; \
+            p2[x] = sum; \
             sum += v; \
         } \
         for (uint x = 0; x < length; x++) { \
-            *(p1 + (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++) = *(p0 + x); \
+            p1[p2[(cmpmod(p0[x]) >> r) & ((1 << RADIX) - 1)]++] = p0[x]; \
         } \
         swap(p0, p1, E*); \
     } \
@@ -215,18 +221,18 @@ void Array<E>::sort(Array<V> move) const { \
     for (ubyte r = 0; r < bits(E); r += RADIX) { \
         counts.fill(); \
         for (uint x = 0; x < length; x++) { \
-            (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++; \
+            p2[(cmpmod(p0[x]) >> r) & ((1 << RADIX) - 1)]++; \
         } \
         uint sum = 0; \
         for (uint x = 0; x < (1 << RADIX); x++) { \
-            uint v = *(p2 + x); \
-            *(p2 + x) = sum; \
+            uint v = p2[x]; \
+            p2[x] = sum; \
             sum += v; \
         } \
         for (uint x = 0; x < length; x++) { \
-            uint i = (*(p2 + ((cmpmod(*(p0 + x)) >> r) & ((1 << RADIX) - 1))))++; \
-            *(p1 + i) = *(p0 + x); \
-            *(m1 + i) = *(m0 + x); \
+            uint i = p2[(cmpmod(p0[x]) >> r) & ((1 << RADIX) - 1)]++; \
+            p1[i] = p0[x]; \
+            m1[i] = m0[x]; \
         } \
         swap(p0, p1, E*); \
         swap(m0, m1, V*); \

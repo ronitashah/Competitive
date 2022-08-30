@@ -43,6 +43,14 @@ struct List {
     inline void sort(Array<V> move) const {view().sort(move);}
     inline uint find(E v) const {return view().find(v);}
     inline bool contains(E v) const {return view().contains(v);}
+    inline void fill() const {view().fill();}
+    inline void fill (E v) const {view().fill(v);}
+    inline void init() const {view().init();}
+    inline uint higher() const {return view().higher();}
+    inline uint ceil() const {return view().ceil();}
+    inline uint lower() const {return view().lower();}
+    inline uint floor() const {return view().floor();}
+    inline uint binsearch() const {return view().binsearch();}
     inline void add() {
         if (size == arr.length) {
             arr.resize(std::max((uint)1, 2 * arr.length));
@@ -68,12 +76,12 @@ struct List {
         E* v = vals.ptr();
         uint cur = indexes.length - 1;
         for (uint x = size - 1; x != MAXUINT; x--) {
-            if (cur != MAXUINT && *(i + cur) == x - cur) {
-                *(p + x) = *(v + cur);
+            if (cur != MAXUINT && i[cur] == x - cur) {
+                p[x] = v[cur];
                 cur--;
                 continue;
             }
-            *(p + x) = *(p + x - cur - 1);
+            p[x] = p[x - cur - 1];
         }
     }
     inline E remove() {
@@ -96,11 +104,11 @@ struct List {
         uint* i = indexes.ptr();
         uint cur = 0;
         for (uint x = 0; x < size; x++) {
-            if (cur < indexes.length && *(i + cur) == x) {
+            if (cur < indexes.length && i[cur] == x) {
                 cur++;
                 continue;
             }
-            *(p + x - cur) = *(p + x);
+            p[x - cur] = p[x];
         }
         for (uint x = 0; x < cur; x++) {
             remove();

@@ -9,10 +9,13 @@
 struct Roll {
     static ulong radix;
     static ulong randadd;
-    ulong val;
-    ulong pow;
-    constexpr Roll() : Roll(0, 1) {}
-    constexpr Roll(ulong v, ulong p) : val(v), pow(p) {}
+    ulong val = 0;
+    ulong pow = 1;
+    constexpr Roll() {}
+    constexpr Roll(ulong v, ulong p) {
+        val = v;
+        pow = p;
+    }
     template<class A, class B>
     inline Roll(T2<A, B> t) {
         val = my::hash(t.a) * radix + my::hash(t.b);
@@ -20,11 +23,8 @@ struct Roll {
     }
     template<class E>
     Roll(const E* p, uint s) {
-        val = 0;
-        pow = 1;
         for (uint x = 0; x < s; x++) {
-            val = val * radix + my::hash(*(p + x));
-            pow *= radix;
+            roll(my::hash(p[x]));
         }
     }
     template<class E>
@@ -66,6 +66,18 @@ struct Roll {
     }
     inline void rollunroll(ulong roll, ulong unroll) {val = val * radix + roll - unroll * pow;}
     constexpr void rollunroll(Roll roll, Roll unroll) {val = val * roll.pow + roll.val - unroll.val * pow;}
+    constexpr void unrollback(Roll r, ulong p) {
+        val -= r.val * p;
+        pow = p;
+    }
+    constexpr void unroll(ulong v, ulong p) {
+        val -= v * p;
+        pow = p;
+    }
+    inline int compare(Roll r) const {
+        return my::compare(hash(), r.hash());
+    }
+    CMPOPS(Roll)
 };
 
 namespace my {

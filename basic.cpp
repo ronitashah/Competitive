@@ -6,6 +6,7 @@
 #include <string.h>
 #include <bitset>
 #include <chrono>
+#include <string>
 
 #define COMMA ,
 #define PAREN0 (
@@ -138,11 +139,10 @@ template<class A, class B>
 PRINTD(T2<A COMMA B>)
 
 struct Roll;
-namespace my {
-RELD(Roll)
-HASHD(Roll)
-}
-PRINTD(Roll)
+METHD(Roll, )
+
+struct Comm;
+METHD(Comm, )
 
 template<class E>
 struct Array;
@@ -178,6 +178,12 @@ RELD(Map<K COMMA V>)
 }
 template<class K, class V>
 PRINTD(Map<K COMMA V>)
+
+struct DST;
+namespace my {
+RELD(DST)
+}
+PRINTD(DST)
 
 template<class A, class B>
 struct T2 {

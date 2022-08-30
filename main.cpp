@@ -1,35 +1,35 @@
 #include "set.cpp"
 #include "heap.cpp"
 #include "map.cpp"
+#include "fen.cpp"
+#include "comm.cpp"
+#include "dst.cpp"
 
 int main() {
-    Array<ulong> a = Array<ulong>(1 << 2);
-    Array<ulong> b = Array<ulong>(a.length);
-    Array<ulong> c = Array<ulong>(a.length);
-    for (uint x = 0; x < a.length; x++) {
-        a.set(x, randulong());
-        b.set(x, randulong());
-        c.set(x, randulong());
+    Array<uint> a = Array<uint>(1 << 12);
+    println(a.length);
+    for (uint x = 0; x < a.length; x++ ) {
+        a.ptr()[x] = randuint();
     }
-    Map<ulong, ulong> m = Map<ulong, ulong>();
-    for (uint x = 0; x < a.length; x++) {
-        if (!m.add(a[x], b[x])) {
-            println("bad");
+    Array<Array<Comm>> b = Array<Array<Comm>>(a.length);
+    for (uint from = 0; from < a.length; from++) {
+        b.ptr()[from] = Array<Comm>(a.length + 1);
+        b[from].ptr()[from] = Comm();
+        for (uint to = from + 1; to <= a.length; to++) {
+            b[from].ptr()[to] = b[from][to - 1] + a[to - 1];
         }
     }
+    Array<Comm> c = Array<Comm>(a.length + 1);
+    *c.ptr() = Comm();
     for (uint x = 0; x < a.length; x++) {
-        uint i = m.id(a[x]);
-        if (i == MAXUINT || *(ulong*)M.ptr(i) != b[x]) {
-            println("bad2");
-        }
-        *(ulong*)M.ptr(i) = c[x];
+        c.ptr()[x + 1] = c[x] + a[x];
     }
-    for (uint x = 0; x < a.length; x++) {
-        if (m.get(a[x]) != c[x]) {
-            println("bad3");
+    for (uint from = 0; from < a.length; from++) {
+        for (uint to = from; to <= a.length; to++) {
+            if (b[from][to].val != (c[to] - c[from]).val) {
+                println("bad");
+            }
         }
     }
-    println(m);
     println("completed");
-    return 0;
 }

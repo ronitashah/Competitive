@@ -20,8 +20,8 @@ struct Heap {
     constexpr E peek() const {return arr[0];}
     constexpr uint fix(uint i) const {
         E* p = ptr();
-        uint min = 2 * i + 1 >= size || *(p + i) < *(p + 2 * i + 1) ? 2 * i + 2 >= size || *(p + i) < *(p + 2 * i + 2) ? i : 2 * i + 2 : 2 * i + 2 >= size || *(p + 2 * i + 1) < *(p + 2 * i + 2) ? 2 * i + 1 : 2 * i + 2;
-        swap(*(p + i), *(p + min), E);
+        uint min = 2 * i + 1 >= size || p[i] < p[2 * i + 1] ? 2 * i + 2 >= size || p[i] < p[2 * i + 2] ? i : 2 * i + 2 : 2 * i + 2 >= size || p[2 * i + 1] < p[2 * i + 2] ? 2 * i + 1 : 2 * i + 2;
+        swap(p[i], p[min], E);
         return min;
     }
     void fix() const {
@@ -46,20 +46,20 @@ struct Heap {
         uint cur = size;
         for (;cur > 0;) {
             uint parent = (cur - 1) / 2;
-            if (val < *(p + parent)) {
-                *(p + cur) = *(p + parent);
+            if (val < p[parent]) {
+                p[cur] = p[parent];
                 cur = parent;
                 continue;
             }
             break;
         }
-        *(p + cur) = val;
+        p[cur] = val;
         size++;
     }
     E pop() {
         E ans = peek();
         size--;
-        arr.set(0, arr[size]);
+        arr.ptr()[0] =arr[size];
         if (SMALLSIZE && size == arr.length / 4) {
             arr.resize(arr.length / 2);
         }
@@ -80,7 +80,7 @@ std::ostream& operator<<(std::ostream& os, Heap<E> h) {
         if (ceil2(x + 1) == x + 1) {
             os << '\n';
         }
-        os << *(p + x) << " ";
+        os << p[x] << " ";
     }
     return os;
 }
